@@ -7,51 +7,35 @@ This is a temporary script file.
 
 from flask import Flask, request
 from flask_restful import Resource, Api
-import getvalue
-import redis 
-from rq import Queue
+import redisgetvalue
 
-
-obj = getvalue.getValue().caller()
 
 app = Flask(__name__)
 api = Api(app)
 
-r = redis.Redis(host='localhost', port=6379, db=0)
-val = r.set('foo', 'bar')
-print(val)
-q = Queue(connection=r)
+commonObj = redisgetvalue.dataProcess()
 
-def rediscall(n):
-    print("Task running")
-    
-    
-class HelloWorld(Resource):
-    def get(self):
-        someval=r.get('foo')
-        sendto=f"redis: {someval} and {obj}"
-        return {'hello': sendto}
-    
-class redispost(Resource):
+class getTempvalues(Resource):
     def post(self):
-        some_json = request.get_json();
-        print(some_json['key'])
-        retset = r.set(some_json['key'], some_json['blogID'])
-        someval=r.get('foo')
-        sendto=f"redis: {someval} and {obj} and set - {retset}"
-        return {'hello': sendto}
+        requestValues = request.get_json();
+        print(requestValues['blogID'])
+        tempItems = commonObj.getTemps(requestValues['blogID'])
+        return {'temp': tempItems}
     
-class redisget(Resource):
+class putTempvalue(Resource):
     def post(self):
-        some_json = request.get_json();
-        print(some_json['key'])
-        retget = r.get(some_json['key'])
-        print(retget.decode("utf-8") )
-        return {'value': retget.decode("utf-8") }
+        requestValues = request.get_json();
+        isTempSave = commonObj.saveTemps(requestValues['blogID'], requestValues['items'])
+        return {'put': isTempSave}
 
-api.add_resource(HelloWorld, '/')
-api.add_resource(redispost, '/redis/set')
-api.add_resource(redisget, '/redis/get')
+api.add_resource(getTempvalues, '/redis/get')
+api.add_resource(putTempvalue, '/redis/put')
 
 if __name__ == '__main__':
     app.run(debug=True)
+
+
+
+
+
+#retget.decode("utf-8")
