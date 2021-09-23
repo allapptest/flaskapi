@@ -7,13 +7,15 @@ This is a temporary script file.
 
 from flask import Flask, request
 from flask_restful import Resource, Api
-import redisgetvalue
+#import modules.redisgetvalue as redisgetvalue
+import proc.redisproc as redisproc
+import json
 
 
 app = Flask(__name__)
 api = Api(app)
 
-commonObj = redisgetvalue.dataProcess()
+commonObj = redisproc.dataProcess()
 
 class getTempvalues(Resource):
     def post(self):
@@ -25,8 +27,22 @@ class getTempvalues(Resource):
 class putTempvalue(Resource):
     def post(self):
         requestValues = request.get_json();
-        isTempSave = commonObj.saveTemps(requestValues['blogID'], requestValues['items'])
-        return {'put': isTempSave}
+        # print(type(requestValues), "############################", requestValues);
+        json_object = json.dumps(requestValues['items'], indent = 4) 
+        # print(type(json_object), "############################", json_object);
+        
+        #print(json_object)
+        # print(type(requestValues['items']), "############################", requestValues['items'])
+        tester = commonObj.itemSave(requestValues['blogID'], requestValues['items'])
+        if tester == True:
+            return {'Status': 201, 'Message': 'Value inserted'}
+        else:
+            return {'Status': 500, 'Message': 'Error'}
+        
+        # isTempSave = commonObj.saveTemps(requestValues['blogID'], requestValues['items'])
+        
+        # return {'put': isTempSave}
+        
 
 api.add_resource(getTempvalues, '/redis/get')
 api.add_resource(putTempvalue, '/redis/put')
